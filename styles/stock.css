@@ -1,0 +1,112 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background-color: #f4f4f4;
+}
+
+header {
+  background-color: #333;
+  color: white;
+  padding: 20px;
+  text-align: center;
+  position: relative;
+}
+
+header button {
+  position: absolute;
+  top: 15px;
+  padding: 8px 12px;
+  background-color: #1abc9c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Botón Volver a la izquierda */
+header button:nth-of-type(1) {
+  left: 20px;
+}
+
+/* Botón Cerrar sesión a la derecha */
+header button.btnCerrarSesion {
+  right: 20px;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  background-color: #444;
+}
+
+nav button {
+  background: none;
+  border: none;
+  color: white;
+  padding: 15px 30px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+nav button.active {
+  background-color: #1abc9c;
+}
+
+section {
+  display: none;
+  padding: 20px;
+}
+
+section.active {
+  display: block;
+}
+
+form input, form select {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  margin-top: 10px;
+}
+
+th, td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+th {
+  background-color: #333;
+  color: white;
+}
+
+.status-ok {
+  color: green;
+  font-weight: bold;
+}
+
+.status-low {
+  color: orange;
+  font-weight: bold;
+}
+
+.status-critical {
+  color: red;
+  font-weight: bold;
+}
+
+#formAgregarProducto {
+  display: none;
+  margin-bottom: 20px;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+}
