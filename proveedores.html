@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Proveedores</title>
+  <link rel="stylesheet" href="../Teka/styles/proveedores.css">
+</head>
+<body>
+  <header>
+    <button onclick="window.location.href='teka.html'">⬅ Volver</button>
+    <button onclick="location.href='login.html'" class="btnCerrarSesion">Cerrar sesión</button>
+    <h1>Gestión de Proveedores</h1>
+  </header>
+  
+  <nav>
+    <button onclick="mostrarSeccion('proveedor')" class="active">➕ Proveedor</button>
+    <button onclick="mostrarSeccion('catalogo')">📦 Catálogo</button>
+    <button onclick="mostrarSeccion('factura')">🧾 Factura</button>
+    <button onclick="mostrarSeccion('listarProveedores')">📋 Listar Proveedores</button>
+    <button onclick="mostrarSeccion('listarFacturas')">📆 Listar Facturas</button>
+  </nav>
+
+  <section id="proveedor" class="active">
+    <h2>Carga de nuevo Proveedor</h2>
+    <form id="formProveedor">
+      <input type="text" id="nombreProveedor" placeholder="Nombre del proveedor" required>
+      <input type="text" id="cuit" placeholder="CUIT" required>
+      <select id="rubro" required>
+        <option value="">Seleccione un rubro</option>
+        <option value="Alimentos">Rubro 1</option>
+        <option value="Tecnología">Rubro 2</option>
+        <option value="Textil">Rubro 3</option>
+        <option value="Servicios">Rubro 4</option>
+      </select>
+      
+      <input type="text" id="telefono" placeholder="Teléfono" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <!-- Campos nuevos -->
+      <input type="text" id="direccion" placeholder="Dirección" required>
+      <input type="text" id="localidad" placeholder="Localidad" required>
+      <input type="text" id="aliasCbu" placeholder="Alias/CBU" required>
+      <select id="tipoIva" required>
+        <option value="" disabled selected>Tipo de IVA</option>
+        <option value="Responsable Inscripto">Responsable Inscripto</option>
+        <option value="Monotributo">Monotributo</option>
+        <option value="Exento">Exento</option>
+      </select>
+      <select id="estado">
+        <option value="Activo">Activo</option>
+        <option value="Inactivo">Inactivo</option>
+      </select>
+      <button type="submit">Registrar Proveedor</button>
+    </form>
+  </section>
+
+  <section id="catalogo">
+    <h2>Carga de Catálogo</h2>
+    <form id="formCatalogo">
+      <input type="text" id="catalogoProveedor" placeholder="Nombre del proveedor" required>
+      <input type="text" id="descripcionCatalogo" placeholder="Descripción del catálogo">
+      <input type="url" id="enlaceCatalogo" placeholder="Enlace al catálogo (opcional)">
+      <input type="file" id="archivoCatalogo">
+      <button type="submit">Subir Catálogo</button>
+    </form>
+  </section>
+
+  <section id="factura">
+    <h2>Carga de Factura</h2>
+    <form id="formFactura">
+      <input type="date" id="fechaFactura" required>
+      <select id="proveedorFactura" required>
+      <option value="" disabled selected>Seleccionar proveedor</option>
+      </select>    
+      <input type="text" id="numeroFactura" placeholder="N° de Factura" required>
+      <input type="number" id="monto" placeholder="Monto" required>
+      <textarea id="concepto" placeholder="Concepto"></textarea>
+      <select id="estadoPago">
+        <option value="Pagado">Pagado</option>
+        <option value="Pendiente">Pendiente</option>
+      </select>
+         <textarea id="observaciones" placeholder="Observaciones"></textarea>
+      <button type="submit">Registrar Factura</button>
+    </form>
+  </section>
+
+  <section id="listarProveedores">
+    <h2>Listado de Proveedores</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>CUIT</th>
+          <th>Rubro</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th>Dirección</th>
+          <th>Localidad</th>
+          <th>Alias/CBU</th>
+          <th>Tipo IVA</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody id="tablaProveedores"></tbody>
+    </table>
+  </section>
+
+  <section id="listarFacturas">
+    <h2>Listado de Facturas por Fecha</h2>
+    <form id="formFiltro">
+      <label>Desde:</label>
+      <input type="date" id="desde">
+      <label>Hasta:</label>
+      <input type="date" id="hasta">
+      <button type="submit">Filtrar</button>
+    </form>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>N° Factura</th>
+          <th>Proveedor</th>
+          <th>Monto</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaFacturas"></tbody>
+    </table>
+  </section>
+
+  <script>
+    let proveedores = [];
+    let facturas = [];
+  
+    function mostrarSeccion(id) {
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      const boton = Array.from(document.querySelectorAll('nav button')).find(btn => btn.textContent.includes(
+        id.includes('Proveedores') ? 'Proveedores' : id.includes('Facturas') ? 'Facturas' : id.charAt(0).toUpperCase() + id.slice(1)));
+      if (boton) boton.classList.add('active');
+    }
+  
+    function guardarEnLocalStorage() {
+      localStorage.setItem('proveedores', JSON.stringify(proveedores));
+      localStorage.setItem('facturas', JSON.stringify(facturas));
+    }
+  
+    function cargarDesdeLocalStorage() {
+      const datosProveedores = localStorage.getItem('proveedores');
+      const datosFacturas = localStorage.getItem('facturas');
+      if (datosProveedores) {
+        proveedores = JSON.parse(datosProveedores);
+        actualizarTablaProveedores();
+        actualizarSelectProveedores();
+      }
+      if (datosFacturas) {
+        facturas = JSON.parse(datosFacturas);
+        actualizarTablaFacturas();  // IMPORTANTE: Actualizar tabla para que se vean las facturas con botones
+      }
+    }
+  
+    function eliminarProveedor(index) {
+      if (confirm('¿Seguro que deseas eliminar este proveedor?')) {
+        proveedores.splice(index, 1);
+        guardarEnLocalStorage();
+        actualizarTablaProveedores();
+        actualizarSelectProveedores();
+      }
+    }
+  
+    function limpiarTodo() {
+      if (confirm('Esto eliminará todos los datos guardados. ¿Continuar?')) {
+        localStorage.clear();
+        proveedores = [];
+        facturas = [];
+        actualizarTablaProveedores();
+        actualizarTablaFacturas();  // Limpia también tabla de facturas
+        actualizarSelectProveedores();
+      }
+    }
+  
+    function actualizarTablaProveedores() {
+      const tabla = document.getElementById('tablaProveedores');
+      tabla.innerHTML = '';
+      proveedores.forEach((p, index) => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${p.nombre}</td>
+          <td>${p.cuit}</td>
+          <td>${p.rubro}</td>
+          <td>${p.telefono}</td>
+          <td>${p.email}</td>
+          <td>${p.direccion}</td>
+          <td>${p.localidad}</td>
+          <td>${p.aliasCbu}</td>
+          <td>${p.tipoIva}</td>
+          <td>${p.estado}</td>
+          <td><button onclick="eliminarProveedor(${index})">🗑️ Eliminar</button></td>
+        `;
+        tabla.appendChild(fila);
+      });
+    }
+  
+    function actualizarTablaFacturas() {
+      const tabla = document.getElementById('tablaFacturas');
+      tabla.innerHTML = '';
+      facturas.forEach((f, index) => {
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+          <td>${f.fecha}</td>
+          <td>${f.numero}</td>
+          <td>${f.proveedor}</td>
+          <td>$${f.monto}</td>
+          <td>${f.estado}</td>
+          <td><button onclick="imprimirFactura(${index})">🖨️ Imprimir</button></td>
+        `;
+        tabla.appendChild(fila);
+      });
+    }
+  
+    function actualizarSelectProveedores() {
+      const select = document.getElementById('proveedorFactura');
+      select.innerHTML = '<option value="" disabled selected>Seleccione proveedor</option>';
+      proveedores.forEach(p => {
+        const opcion = document.createElement('option');
+        opcion.value = p.nombre;
+        opcion.textContent = p.nombre;
+        select.appendChild(opcion);
+      });
+    }
+  
+    document.getElementById('formProveedor').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('nombreProveedor').value;
+      const cuit = document.getElementById('cuit').value;
+      const rubro = document.getElementById('rubro').value;
+      const telefono = document.getElementById('telefono').value;
+      const email = document.getElementById('email').value;
+      const direccion = document.getElementById('direccion').value;
+      const localidad = document.getElementById('localidad').value;
+      const aliasCbu = document.getElementById('aliasCbu').value;
+      const tipoIva = document.getElementById('tipoIva').value;
+      const estado = document.getElementById('estado').value;
+  
+      proveedores.push({ nombre, cuit, rubro, telefono, email, direccion, localidad, aliasCbu, tipoIva, estado });
+      guardarEnLocalStorage();
+      actualizarTablaProveedores();
+      actualizarSelectProveedores();
+      this.reset();
+    });
+  
+    document.getElementById('formFactura').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const fecha = document.getElementById('fechaFactura').value;
+      const numero = document.getElementById('numeroFactura').value;
+      const monto = document.getElementById('monto').value;
+      const estado = document.getElementById('estadoPago').value;
+      const proveedor = document.getElementById('proveedorFactura').value;
+  
+      facturas.push({ fecha, numero, proveedor, monto, estado });
+      guardarEnLocalStorage();
+      actualizarTablaFacturas();
+      this.reset();
+    });
+  
+    document.getElementById('formFiltro').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const desde = document.getElementById('desde').value;
+      const hasta = document.getElementById('hasta').value;
+      const tabla = document.getElementById('tablaFacturas');
+      tabla.innerHTML = '';
+  
+      const desdeDate = new Date(desde);
+      const hastaDate = new Date(hasta);
+  
+      facturas
+        .filter(f => {
+          const fecha = new Date(f.fecha);
+          return (!desde || fecha >= desdeDate) && (!hasta || fecha <= hastaDate);
+        })
+        .forEach((f, index) => {
+          const fila = document.createElement('tr');
+          fila.innerHTML = `
+            <td>${f.fecha}</td>
+            <td>${f.numero}</td>
+            <td>${f.proveedor}</td>
+            <td>$${f.monto}</td>
+            <td>${f.estado}</td>
+            <td><button onclick="imprimirFactura(${index})">🖨️ Imprimir</button></td>
+          `;
+          tabla.appendChild(fila);
+        });
+    });
+  
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarDesdeLocalStorage();
+  
+      const botonLimpiar = document.createElement('button');
+      botonLimpiar.textContent = '🧹 Limpiar todo';
+      botonLimpiar.style.margin = '20px';
+      botonLimpiar.onclick = limpiarTodo;
+      document.body.appendChild(botonLimpiar);
+    });
+  
+    function imprimirFactura(index) {
+      const f = facturas[index];
+      const ventana = window.open('', '', 'width=600,height=400');
+      ventana.document.write(`
+        <html>
+          <head>
+            <title>Factura</title>
+            <style>
+              body { font-family: Arial; padding: 20px; }
+              h2 { text-align: center; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              td { padding: 10px; border: 1px solid #ccc; }
+            </style>
+          </head>
+          <body>
+            <h2>Factura</h2>
+            <table>
+              <tr><td><strong>Fecha:</strong></td><td>${f.fecha}</td></tr>
+              <tr><td><strong>Número:</strong></td><td>${f.numero}</td></tr>
+              <tr><td><strong>Proveedor:</strong></td><td>${f.proveedor}</td></tr>
+              <tr><td><strong>Monto:</strong></td><td>$${f.monto}</td></tr>
+              <tr><td><strong>Estado:</strong></td><td>${f.estado}</td></tr>
+            </table>
+            <script>
+              window.onload = function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                }
+              };
+            <\/script>
+          </body>
+        </html>
+      `);
+      ventana.document.close(); // importante para terminar de cargar el documento
+    }
+  </script>
+  
+</body>
+</html>

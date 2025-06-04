@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestión de Stock</title>
+  
+</head>
+<body>
+  <header>
+    <button onclick="window.location.href='teka.html'">⬅ Volver</button>
+    <h1>Gestión de Stock</h1>
+    <link rel="stylesheet" href="../Teka/styles/stock.css">
+    <button onclick="location.href='login.html'" class="btnCerrarSesion">Cerrar sesión</button>
+  </header>
+
+  <nav>
+    <button onclick="mostrarSeccion('stockProductos')" class="active">📦 Productos/Insumos</button>
+    <button onclick="mostrarSeccion('movimientos')">🔁 Movimientos</button>
+    <button onclick="mostrarSeccion('bajoStock')">🚨 Bajo Stock</button>
+    <button onclick="mostrarSeccion('informe')">📄 Informe</button>
+  </nav>
+
+  <section id="stockProductos" class="active">
+    <h2>Stock de Productos e Insumos</h2>
+    <button onclick="document.getElementById('formAgregarProducto').style.display='block'">➕ Agregar Producto/Insumo</button>
+    <form id="formAgregarProducto">
+      <input type="text" id="codigoNuevo" placeholder="Código" required>
+      <input type="text" id="descripcionNueva" placeholder="Descripción" required>
+      <select id="tipoNuevo">
+        <option value="Producto">Producto</option>
+        <option value="Insumo">Insumo</option>
+      </select>
+      <input type="number" id="stockNuevo" placeholder="Stock Inicial" required>
+      <input type="number" id="minimoNuevo" placeholder="Stock Mínimo" required>
+      <button type="submit">Guardar</button>
+    </form>
+    <input type="text" id="busqueda" placeholder="Buscar por nombre o código" oninput="buscar()">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descripción</th>
+          <th>Tipo</th>
+          <th>Stock Actual</th>
+          <th>Stock Mínimo</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tablaStock"></tbody>
+    </table>
+  </section>
+
+  <section id="movimientos">
+    <h2>Registrar Movimiento de Stock</h2>
+    <form id="formMovimiento">
+      <input type="date" id="fechaMovimiento" required>
+      <select id="tipoMovimiento" required>
+        <option value="Ingreso por compra">Ingreso por compra</option>
+        <option value="Ingreso por fabricación">Ingreso por fabricación</option>
+        <option value="Devolución de cliente">Devolución de cliente</option>
+        <option value="Ajuste positivo">Ajuste positivo</option>
+        <option value="Venta de producto">Venta de producto</option>
+        <option value="Consumo en producción">Consumo en producción</option>
+        <option value="Rotura/Pérdida">Rotura/Pérdida</option>
+        <option value="Ajuste negativo">Ajuste negativo</option>
+      </select>
+      <input type="text" id="codigoMovimiento" placeholder="Código del producto" required>
+      <input type="number" id="cantidadMovimiento" placeholder="Cantidad" required>
+      <button type="submit">Registrar Movimiento</button>
+    </form>
+  </section>
+
+  <section id="bajoStock">
+    <h2>Productos/Insumos Bajo Punto de Reposición</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Descripción</th>
+          <th>Stock Actual</th>
+          <th>Stock Mínimo</th>
+        </tr>
+      </thead>
+      <tbody id="tablaBajoStock"></tbody>
+    </table>
+  </section>
+
+  <section id="informe">
+    <h2>Informe de Stock</h2>
+    <button onclick="generarInforme()">Generar Informe</button>
+    <pre id="resultadoInforme"></pre>
+  </section>
+
+  <script>
+    let productos = [];
+
+    function mostrarSeccion(id) {
+      document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function guardarStock() {
+      localStorage.setItem('productos', JSON.stringify(productos));
+    }
+
+    function cargarStock() {
+      const datos = localStorage.getItem('productos');
+      if (datos) {
+        productos = JSON.parse(datos);
+      } else {
+        productos = [
+          { codigo: 'PR001', descripcion: 'Rack TV 1.50m', tipo: 'Producto', stock: 5, minimo: 3 },
+          { codigo: 'PR002', descripcion: 'Mesa Ratona Blanca', tipo: 'Producto', stock: 1, minimo: 5 },
+          { codigo: 'IN001', descripcion: 'Melamina 18mm Blanca', tipo: 'Insumo', stock: 20, minimo: 10 },
+          { codigo: 'IN002', descripcion: 'Tornillos 3cm', tipo: 'Insumo', stock: 2, minimo: 10 }
+        ];
+        guardarStock();
+      }
+      actualizarTabla();
+    }
+
+    function actualizarTabla() {
+      const cuerpo = document.getElementById('tablaStock');
+      cuerpo.innerHTML = '';
+      productos.forEach(p => {
+        let estado = '✅ OK';
+        let clase = 'status-ok';
+        if (p.stock <= p.minimo && p.stock > 0) {
+          estado = '⚠️ Bajo';
+          clase = 'status-low';
+        } else if (p.stock <= 0) {
+          estado = '❌ Crítico';
+          clase = 'status-critical';
+        }
+        const fila = `<tr><td>${p.codigo}</td><td>${p.descripcion}</td><td>${p.tipo}</td><td>${p.stock}</td><td>${p.minimo}</td><td class="${clase}">${estado}</td></tr>`;
+        cuerpo.innerHTML += fila;
+      });
+      actualizarBajoStock();
+    }
+
+    function buscar() {
+      const valor = document.getElementById('busqueda').value.toLowerCase();
+      const filas = document.querySelectorAll('#tablaStock tr');
+      filas.forEach(fila => {
+        const texto = fila.innerText.toLowerCase();
+        fila.style.display = texto.includes(valor) ? '' : 'none';
+      });
+    }
+
+    function actualizarBajoStock() {
+      const tabla = document.getElementById('tablaBajoStock');
+      tabla.innerHTML = '';
+      productos.filter(p => p.stock <= p.minimo).forEach(p => {
+        tabla.innerHTML += `<tr><td>${p.codigo}</td><td>${p.descripcion}</td><td>${p.stock}</td><td>${p.minimo}</td></tr>`;
+      });
+    }
+
+    function generarInforme() {
+      const salida = productos.map(p => `${p.codigo} - ${p.descripcion}: ${p.stock} unidades`).join('\n');
+      document.getElementById('resultadoInforme').textContent = salida;
+    }
+
+    document.getElementById('formAgregarProducto').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const codigo = document.getElementById('codigoNuevo').value.trim();
+      const descripcion = document.getElementById('descripcionNueva').value.trim();
+      const tipo = document.getElementById('tipoNuevo').value;
+      const stock = parseInt(document.getElementById('stockNuevo').value);
+      const minimo = parseInt(document.getElementById('minimoNuevo').value);
+
+      productos.push({ codigo, descripcion, tipo, stock, minimo });
+      guardarStock();
+      actualizarTabla();
+      this.reset();
+      this.style.display = 'none';
+    });
+
+    document.getElementById('formMovimiento').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const codigo = document.getElementById('codigoMovimiento').value.trim();
+      const cantidad = parseInt(document.getElementById('cantidadMovimiento').value);
+      const tipo = document.getElementById('tipoMovimiento').value;
+
+      const prod = productos.find(p => p.codigo === codigo);
+      if (!prod) return alert('Producto no encontrado');
+
+      const ingreso = ['Ingreso por compra', 'Ingreso por fabricación', 'Devolución de cliente', 'Ajuste positivo'].includes(tipo);
+      prod.stock += ingreso ? cantidad : -cantidad;
+
+      guardarStock();
+      actualizarTabla();
+      this.reset();
+    });
+
+    document.addEventListener('DOMContentLoaded', cargarStock);
+  </script>
+</body>
+</html>
